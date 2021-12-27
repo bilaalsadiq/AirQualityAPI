@@ -1,0 +1,164 @@
+﻿<h1>Open Air Quality</h1>
+<hr />
+<p>
+    Use the <strong>Country</strong> and <strong>City</strong> options below to narrow down a location to its city.
+    <br />
+    Choose a location from the options in the table to then view further details.
+</p>
+<hr />
+
+<label for="select-country">Select Country:</label>
+<select id="select-country">
+    <option value=""> -- Select Country -- </option>
+</select>
+<br />
+<label for="select-city">Select City:</label>
+<select id="select-city">
+    <option value=""> -- Select City --</option>
+</select>
+<br />
+<br />
+<table class="table table-hover">
+    <tr>
+        <th>Name</th>
+        <th>City</th>
+        <th>Last Update</th>
+        <th>Measurements</th>
+        <th></th>
+    </tr>
+
+    <tbody id="pollution-results">
+    </tbody>
+</table>
+
+<script>
+
+    $(document).ready(function () {
+
+        //initialise HTML select elements in JavaScript
+        var countrySelectBox = document.getElementById("select-country");
+        var citySelectBox = document.getElementById("select-city");
+        var locationSelectBox = document.getElementById("select-location");
+
+        //load country data on app initialisation
+        $.get("@Url.Action("LoadCountryData", "Home")", function (response) {
+
+            //for each country pulled from method
+            for (var i = 0; i < response.results.length; i++) {
+
+
+                // set var for data attribute
+
+                var country = response.results[i].name;
+                var countryCode = response.results[i].code;
+
+
+                //create options from countries and append the select box
+                var opt = document.createElement('option');
+                //add value to option - will be used to further query locations
+                opt.value = countryCode;
+                opt.innerHTML = country;
+                countrySelectBox.appendChild(opt);
+
+            }
+        });
+
+        //function for getting select country value to pass to city option box
+        $('#select-country').change(function () {
+
+
+            //get selected country option
+            var optionSelected = $(this).find("option:selected");
+
+            //assign value to variable to add search attribute
+            var selectedCountryValue = optionSelected.val();
+            
+            //clear incumbent search options for city and country
+            $("#select-city option").remove();
+            $("#select-location option").remove();
+
+            //Append first option of Select City Box to have no search value. Also good UX
+            $('#select-city').append('<option value="" selected="selected"> -- Select City -- </option>');
+
+
+            //call API using CountryValue String defined from choosing a country option
+            //Get all cities where country code = selected value from earlier
+            $.get("https://u50g7n0cbj.execute-api.us-east-1.amazonaws.com/v2/cities?limit=1000&page=1&offset=0&sort=asc&country_id=" + selectedCountryValue + "&order_by=city", function (response) {
+                for (var i = 0; i < response.results.length; i++) {
+                    //new var called CityOptions
+                    var cityOption = response.results[i].city;
+
+                    //append each option under City Select box with CityOption
+                    var opt = document.createElement('option');
+                    opt.value = cityOption;
+                    opt.innerHTML = cityOption;
+                    citySelectBox.appendChild(opt);
+
+                }
+            });
+
+
+        });
+
+
+        //function for getting select city value
+        $('#select-city').change(function () {
+            
+            //$("#select-location option").remove();
+
+
+            //define selected option once user changes value on city box
+            var optionSelected = $(this).find("option:selected");
+            var selectedCityValue = optionSelected.val();
+
+            
+            //clear existing data from table
+            $("td").remove();
+
+            //call API for location details
+            //get specific location data from the city option chosen earlier
+            $.get("https://u50g7n0cbj.execute-api.us-east-1.amazonaws.com/v2/locations?limit=100&page=1&offset=0&sort=desc&radius=1000&city=" + selectedCityValue + "&order_by=lastUpdated&dumpRaw=false", function (response) {
+                for (var i = 0; i < response.results.length; i++) {
+                    //build table row for each location and add to table
+                    var location = response.results[i].name;
+                    var locationID = response.results[i].id;
+
+                    console.log(location + " " + locationID)
+
+                    var row = `<tr>
+                                    <td>${response.results[i].name}</td>
+                                    <td>${response.results[i].city}</td>
+                                    <td>${response.results[i].lastUpdated}</td>
+                                    <td>${response.results[i].measurements}</td>
+                                    <td><button class="btn btn-default" onClick="viewLocationDetails(${locationID})">View Details</button></td>
+                              </tr>`
+
+                    var table = $('#pollution-results')
+                    //add table data to rows
+                    table.append(row);
+
+                }
+            });
+        });
+
+
+    });
+
+    function viewLocationDetails(locationID) {
+
+        //function called onClick - when button pressed in table row
+        //gets location ID from that row, sends it to C# command and renders new page with location details
+
+        //test location value works on event
+        console.log("Location ID:", locationID);
+
+        //call Controller function + pass through parameter 
+        var link = '@Url.Action("LocationDetails", "Home", new { id = "replace" })';
+        link = link.replace("replace", locationID);
+        
+        console.log(link);
+        //renavigate
+        location.href = link;
+    };
+
+</script>

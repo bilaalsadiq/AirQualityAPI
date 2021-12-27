@@ -1,0 +1,71 @@
+﻿@model AirQualityAPI.Models.RootObject
+
+@{
+    ViewBag.Title = "Location Details";
+}
+<br />
+<div id="jumbotron-image" class="jumbotron">
+
+    <h1>@Model.results[0].name</h1>
+    <p>@Model.results[0].city - @Model.results[0].country</p>
+
+    <p></p>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-3 data-container">
+            <div>
+                <h4>Total Measurements:</h4>
+                <p class="value">@Model.results[0].measurements</p>
+                <hr />
+                <h4>Co-ordinates:</h4>
+                <p>E @Model.results[0].coordinates.longitude , N @Model.results[0].coordinates.latitude</p>
+                <hr />
+                <h4>Dates Active</h4>
+                <p>
+                    <strong>First Collection Date:</strong>
+                    <br />
+                    @Model.results[0].firstUpdated
+                </p>
+                <br />
+                <p>
+                    <strong>Last Collection Date:</strong>
+                    <br />
+                    @Model.results[0].lastUpdated
+                </p>
+                <hr />
+            </div>
+        </div>
+        <div class="col-sm-6 data-container">
+            <h4>Latest Measurements</h4>
+            @foreach (var parameter in Model.results[0].parameters)
+            {
+                <div class="col-sm-4">
+
+                    <p><strong>@parameter.displayName</strong></p>
+                    <p class="value">@parameter.lastValue</p>
+                    <p><strong>@parameter.unit</strong></p>
+                    <p>@parameter.lastUpdated</p>
+
+                </div>
+            }
+        </div>
+
+        <div class="col-sm-3 data-container">
+            <h4>Source</h4>
+
+            <h5><strong><a href="@Model.results[0].sources[Model.results[0].sources.Count - 1].url">@Model.results[0].sources[Model.results[0].sources.Count - 1].name</a></strong></h5>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        /**/
+        console.log('@Model.results[0].parameters[0].displayName');
+    /**/
+});
+</script>
+
